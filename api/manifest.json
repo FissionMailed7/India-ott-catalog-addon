@@ -1,0 +1,23 @@
+{
+  "id": "com.indiaottcatalog.addon",
+  "version": "1.0.0",
+  "name": "India OTT Catalog",
+  "description": "A Stremio addon for Indian OTT content including South Indian movies and Aha OTT",
+  "types": ["movie", "series"],
+  "catalogs": [
+    {
+      "type": "movie",
+      "id": "indian-movies",
+      "name": "Indian Movies",
+      "genres": ["Indian", "Bollywood", "South Indian", "Tollywood", "Kollywood", "Mollywood", "Sandwood"]
+    },
+    {
+      "type": "series",
+      "id": "indian-series",
+      "name": "Indian Series",
+      "genres": ["Indian", "Bollywood", "South Indian", "Tollywood", "Kollywood", "Mollywood", "Sandwood"]
+    }
+  ],
+  "resources": ["catalog", "meta", "stream"],
+  "idPrefixes": ["indiaott:"]
+}
