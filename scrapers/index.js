@@ -29,10 +29,51 @@ const memoizedFetch = memoize(
         max: config.cache.max,
         normalizer: ([url, options]) => {
             // Create a cache key based on URL and options
-            return JSON.stringify({ url, options });
+            return JSON.stringify({ url, options: options || {} });
         }
     }
 );
+
+// Mock data for development - remove or update in production
+const MOCK_CONTENT = {
+    movie: [
+        {
+            id: 'indiaott:mock:movie:1',
+            type: 'movie',
+            name: 'RRR',
+            poster: 'https://via.placeholder.com/300x450?text=RRR',
+            posterShape: 'poster',
+            description: 'An action drama film about two revolutionaries',
+            genres: ['Action', 'Drama', 'South Indian'],
+            releaseInfo: '2022',
+            links: []
+        },
+        {
+            id: 'indiaott:mock:movie:2',
+            type: 'movie',
+            name: 'KGF Chapter 2',
+            poster: 'https://via.placeholder.com/300x450?text=KGF',
+            posterShape: 'poster',
+            description: 'A sequel to the Kannada action-thriller',
+            genres: ['Action', 'Thriller', 'South Indian'],
+            releaseInfo: '2022',
+            links: []
+        }
+    ],
+    series: [
+        {
+            id: 'indiaott:mock:series:1',
+            type: 'series',
+            name: 'Paatal Lok',
+            poster: 'https://via.placeholder.com/300x450?text=PaatalLok',
+            posterShape: 'poster',
+            description: 'A gritty crime drama web series',
+            genres: ['Crime', 'Drama'],
+            releaseInfo: '2020',
+            links: []
+        }
+    ]
+};
 
 /**
  * Scrape content from multiple OTT platforms
@@ -41,6 +82,8 @@ const memoizedFetch = memoize(
  * @returns {Promise<Array>} - Array of content items
  */
 async function scrapeContent(type, catalogId) {
+    console.log(`[scrapeContent] Fetching ${type} content for catalog: ${catalogId}`);
+    
     const results = [];
     const contentPromises = [];
 
@@ -58,10 +101,11 @@ async function scrapeContent(type, catalogId) {
         contentPromises.push(
             scrapePlatform(platform, url, type)
                 .then(items => {
+                    console.log(`[scrapeContent] Got ${items.length} items from ${platform.name}`);
                     results.push(...items);
                 })
                 .catch(error => {
-                    console.error(`Error scraping ${platform.name}:`, error.message);
+                    console.error(`[scrapeContent] Error scraping ${platform.name}:`, error.message);
                 })
         );
     }
@@ -69,8 +113,18 @@ async function scrapeContent(type, catalogId) {
     // Wait for all platform scrapes to complete
     await Promise.allSettled(contentPromises);
 
-    // Sort by popularity/recency (you can adjust this logic)
-    return results.sort((a, b) => (b.releaseInfo || '').localeCompare(a.releaseInfo || ''));
+    // If no results from scraping, use mock data for demo
+    if (results.length === 0) {
+        console.log(`[scrapeContent] No content found, using mock data for ${type}`);
+        results.push(...(MOCK_CONTENT[type] || []));
+    }
+
+    // Sort by release date (newest first)
+    return results.sort((a, b) => {
+        const aYear = parseInt(a.releaseInfo) || 0;
+        const bYear = parseInt(b.releaseInfo) || 0;
+        return bYear - aYear;
+    });
 }
 
 /**
@@ -81,44 +135,79 @@ async function scrapeContent(type, catalogId) {
  * @returns {Promise<Array>} - Array of content items
  */
 async function scrapePlatform(platform, url, type) {
-    console.log(`Scraping ${platform.name} (${url})`);
+    console.log(`[scrapePlatform] Scraping ${platform.name} from ${url}`);
     
     try {
         const html = await memoizedFetch(url);
-        if (!html) return [];
+        if (!html) {
+            console.warn(`[scrapePlatform] No HTML content received from ${platform.name}`);
+            return [];
+        }
 
         const $ = cheerio.load(html);
         const items = [];
 
-        // This is a simplified example - you'll need to adjust the selectors
-        // based on the actual HTML structure of each platform
-        $('.content-item, .tile, .card').each((i, el) => {
-            const $el = $(el);
-            const title = $el.find('h3, .title, [itemprop="name"]').first().text().trim();
-            const image = $el.find('img').attr('src') || $el.find('img').attr('data-src');
-            const link = $el.find('a').attr('href');
-            
-            if (title && image) {
-                items.push({
-                    id: `indiaott:${platform.id}:${type}:${i}`,
-                    type,
-                    name: title,
-                    poster: image.startsWith('http') ? image : `${platform.baseUrl}${image}`,
-                    posterShape: 'poster',
-                    description: $el.find('.description, .synopsis').text().trim(),
-                    genres: $el.find('.genre, .categories').text().trim().split(',').map(g => g.trim()),
-                    releaseInfo: $el.find('.year, .release-date').text().trim(),
-                    links: link ? [{
-                        url: link.startsWith('http') ? link : `${platform.baseUrl}${link}`,
-                        name: `Watch on ${platform.name}`
-                    }] : []
+        // Try multiple selector patterns for different platforms
+        const selectors = [
+            '.content-item',
+            '.tile',
+            '.card',
+            '[data-content-type]',
+            '.movie-card',
+            '.show-card',
+            '.poster-container'
+        ];
+
+        for (const selector of selectors) {
+            const elements = $(selector);
+            if (elements.length > 0) {
+                console.log(`[scrapePlatform] Found ${elements.length} items using selector: ${selector}`);
+                
+                elements.each((i, el) => {
+                    const $el = $(el);
+                    const title = $el.find('h3, h4, .title, .name, [itemprop="name"]').first().text().trim();
+                    const image = $el.find('img').attr('src') || 
+                                 $el.find('img').attr('data-src') || 
+                                 $el.find('img').attr('data-image');
+                    const link = $el.find('a').first().attr('href');
+                    
+                    if (title && image) {
+                        items.push({
+                            id: `indiaott:${platform.id}:${type}:${i}`,
+                            type,
+                            name: title,
+                            poster: image.startsWith('http') ? image : `${platform.baseUrl}${image}`,
+                            posterShape: 'poster',
+                            description: $el.find('.description, .synopsis, .overview').text().trim(),
+                            genres: $el.find('.genre, .categories, [itemprop="genre"]')
+                                .text()
+                                .trim()
+                                .split(',')
+                                .map(g => g.trim())
+                                .filter(g => g.length > 0),
+                            releaseInfo: $el.find('.year, .release-date, [itemprop="datePublished"]').text().trim(),
+                            links: link ? [{
+                                url: link.startsWith('http') ? link : `${platform.baseUrl}${link}`,
+                                name: `Watch on ${platform.name}`
+                            }] : []
+                        });
+                    }
                 });
+                
+                // If we found items, return them
+                if (items.length > 0) {
+                    return items;
+                }
             }
-        });
+        }
+
+        if (items.length === 0) {
+            console.warn(`[scrapePlatform] No items found on ${platform.name} using any selector`);
+        }
 
         return items;
     } catch (error) {
-        console.error(`Error scraping ${platform.name}:`, error.message);
+        console.error(`[scrapePlatform] Error scraping ${platform.name}:`, error.message);
         return [];
     }
 }
@@ -126,5 +215,6 @@ async function scrapePlatform(platform, url, type) {
 module.exports = {
     scrapeContent,
     // Export for testing
-    _scrapePlatform: scrapePlatform
+    _scrapePlatform: scrapePlatform,
+    _getMockContent: () => MOCK_CONTENT
 };

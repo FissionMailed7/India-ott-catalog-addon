@@ -4,8 +4,9 @@
   "description": "A Stremio addon for Indian OTT content including South Indian movies and Aha OTT",
   "main": "api/index.js",
   "scripts": {
-    "start": "node api/index.js",
-    "dev": "nodemon api/index.js",
+    "start": "node local-server.js",
+    "dev": "nodemon local-server.js",
+    "vercel-dev": "vercel dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -22,10 +23,15 @@
     "@vercel/node": "^3.0.0",
     "axios": "^1.6.2",
     "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
     "memoizee": "^0.4.15",
     "stremio-addon-sdk": "^1.6.10"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.x"
   }
 }

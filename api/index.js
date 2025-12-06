@@ -8,6 +8,8 @@ const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
     <title>India OTT Catalog</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -74,8 +76,24 @@ const htmlContent = `<!DOCTYPE html>
 </html>`;
 
 // Load manifest from file
-const manifestPath = path.join(__dirname, 'manifest.json');
-const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+let manifest;
+try {
+    const manifestPath = path.join(__dirname, 'manifest.json');
+    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+} catch (error) {
+    console.error('Error loading manifest.json:', error);
+    // Fallback manifest
+    manifest = {
+        id: 'com.indiaottcatalog.addon',
+        version: '1.0.0',
+        name: 'India OTT Catalog',
+        description: 'A Stremio addon for Indian OTT content',
+        types: ['movie', 'series'],
+        catalogs: [],
+        resources: ['catalog', 'meta', 'stream'],
+        idPrefixes: ['indiaott:']
+    };
+}
 
 const builder = new addonBuilder(manifest);
 
@@ -106,9 +124,10 @@ const router = getRouter(builder.getInterface());
 // Helper function to set common headers
 function setHeaders(res, contentType = 'application/json') {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS, POST');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.setHeader('Content-Type', `${contentType}; charset=utf-8`);
+    res.setHeader('Cache-Control', 'public, max-age=300');
 }
 
 // Export the serverless function
@@ -124,36 +143,48 @@ module.exports = async (req, res) => {
     // Handle requests
     try {
         // Serve static manifest.json
-        if (req.url === '/manifest.json' && req.method === 'GET') {
+        if (req.url === '/manifest.json' || req.url.endsWith('manifest.json')) {
             console.log('Serving manifest.json');
-            return res.end(JSON.stringify(manifest, null, 2));
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            return res.status(200).end(JSON.stringify(manifest, null, 2));
         }
 
         // Handle root URL
-        if (req.url === '/' && req.method === 'GET') {
+        if (req.url === '/' || req.url === '') {
             setHeaders(res, 'text/html');
-            return res.end(htmlContent);
+            return res.status(200).end(htmlContent);
         }
 
         // Handle health check
-        if (req.url === '/health' && req.method === 'GET') {
-            return res.end(JSON.stringify({ status: 'ok', version: manifest.version }));
+        if (req.url === '/health' || req.url.endsWith('/health')) {
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            return res.status(200).end(JSON.stringify({ 
+                status: 'ok', 
+                version: manifest.version,
+                timestamp: new Date().toISOString()
+            }));
         }
 
-        // Handle other API requests
-        await router(req, res, () => {
+        // Handle other API requests through router
+        return router(req, res, () => {
             if (!res.headersSent) {
                 res.statusCode = 404;
-                res.end(JSON.stringify({ error: 'Not Found' }));
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.end(JSON.stringify({ 
+                    error: 'Not Found',
+                    message: 'Endpoint not found'
+                }));
             }
         });
     } catch (error) {
         console.error('Error handling request:', error);
         if (!res.headersSent) {
             res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
             res.end(JSON.stringify({ 
                 error: 'Internal Server Error',
-                message: error.message
+                message: error.message,
+                timestamp: new Date().toISOString()
             }));
         }
     }

@@ -1,23 +1,22 @@
 {
   "version": 2,
+  "env": {
+    "NODE_ENV": "production"
+  },
   "builds": [
     {
       "src": "api/index.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 30,
+        "memory": 1024
+      }
     }
   ],
   "routes": [
     {
-      "src": "/manifest.json",
-      "dest": "/api"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/api"
+      "dest": "/api/index.js"
     }
   ]
 }
