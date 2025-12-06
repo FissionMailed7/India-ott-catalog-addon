@@ -1,13 +1,5 @@
-const express = require('express');
-const cors = require('cors');
 const { addonBuilder, getRouter } = require('stremio-addon-sdk');
 const { scrapeContent } = require('./scrapers');
-
-const app = express();
-const PORT = process.env.PORT || 7000;
-
-// Enable CORS for all routes
-app.use(cors());
 
 // Define the addon manifest
 const manifest = {
@@ -39,7 +31,6 @@ const builder = new addonBuilder(manifest);
 // Catalog handler
 builder.defineCatalogHandler(async ({ type, id, extra }) => {
     console.log(`Request for ${type} catalog: ${id}`);
-    
     try {
         const content = await scrapeContent(type, id);
         return { metas: content };
@@ -52,33 +43,51 @@ builder.defineCatalogHandler(async ({ type, id, extra }) => {
 // Meta handler
 builder.defineMetaHandler(async (args) => {
     console.log('Meta request:', args);
-    // This would be implemented to return detailed metadata
     return null;
 });
 
 // Stream handler
 builder.defineStreamHandler(async (args) => {
     console.log('Stream request:', args);
-    // This would be implemented to return streaming links
-    return Promise.resolve({ streams: [] });
+    return { streams: [] };
 });
 
-// Add the addon routes
-app.use('/', getRouter(builder.getInterface()));
+// Create the router
+const router = getRouter(builder.getInterface());
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', version: manifest.version });
-});
+// Export the serverless function
+module.exports = async (req, res) => {
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
 
-// Start the server
-app.listen(PORT, () => {
-    console.log(`India OTT Catalog Addon running on http://localhost:${PORT}`);
-    console.log(`Add this to Stremio: http://localhost:${PORT}/manifest.json`);
-});
+    // Handle manifest request
+    if (req.url === '/manifest.json' && req.method === 'GET') {
+        return res.json(manifest);
+    }
 
-module.exports = { builder };
+    // Handle health check
+    if (req.url === '/health' && req.method === 'GET') {
+        return res.json({ status: 'ok', version: manifest.version });
+    }
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);});
+    // Handle other requests
+    try {
+        await router(req, res, () => {
+            if (!res.headersSent) {
+                res.status(404).json({ error: 'Not Found' });
+            }
+        });
+    } catch (error) {
+        console.error('Error handling request:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+};
