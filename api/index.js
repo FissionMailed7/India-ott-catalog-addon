@@ -1,6 +1,59 @@
 const { addonBuilder, getRouter } = require('stremio-addon-sdk');
 const { scrapeContent } = require('../scrapers');
 
+// HTML content for the root URL
+const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>India OTT Catalog</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        h1 { color: #333; }
+        .addon-url { 
+            margin: 20px 0; 
+            padding: 10px; 
+            width: 80%; 
+            max-width: 500px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-link { 
+            display: inline-block; 
+            margin: 10px; 
+            padding: 10px 20px; 
+            background: #0070f3; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+        }
+        .test-link:hover {
+            background: #005bb5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>India OTT Catalog Addon</h1>
+        <p>Add this URL to Stremio to access Indian OTT content:</p>
+        <input type="text" id="addonUrl" class="addon-url" readonly>
+        <div>
+            <a href="/manifest.json" class="test-link" target="_blank">View Manifest</a>
+            <a href="/health" class="test-link" target="_blank">Health Check</a>
+        </div>
+    </div>
+    <script>
+        document.getElementById('addonUrl').value = window.location.origin + '/manifest.json';
+    </script>
+</body>
+</html>
+`;
+
 // Define the addon manifest
 const manifest = {
     id: 'com.indiaottcatalog.addon',
@@ -61,10 +114,16 @@ module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    
+
     // Handle preflight requests
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
+    }
+
+    // Handle root URL
+    if (req.url === '/' && req.method === 'GET') {
+        res.setHeader('Content-Type', 'text/html');
+        return res.send(htmlContent);
     }
 
     // Handle manifest request
