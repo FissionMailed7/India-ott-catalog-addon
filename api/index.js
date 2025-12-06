@@ -4,12 +4,74 @@ const fs = require('fs');
 const path = require('path');
 
 // HTML content for the root URL
-const htmlContent = `
-<!DOCTYPE html>
+const htmlContent = `<!DOCTYPE html>
 <html>
-<!-- Previous HTML content remains the same -->
-</html>
-`;
+<head>
+    <title>India OTT Catalog</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px; 
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        h1 { 
+            color: #333; 
+            margin-bottom: 30px;
+        }
+        .addon-url { 
+            margin: 20px auto; 
+            padding: 12px; 
+            width: 80%; 
+            max-width: 500px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            text-align: center;
+        }
+        .test-link { 
+            display: inline-block; 
+            margin: 15px; 
+            padding: 12px 24px; 
+            background: #0070f3; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .test-link:hover {
+            background: #005bb5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .links {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>India OTT Catalog Addon</h1>
+        <p>Add this URL to Stremio to access Indian OTT content:</p>
+        <input type="text" id="addonUrl" class="addon-url" readonly>
+        <div class="links">
+            <a href="/manifest.json" class="test-link" target="_blank">View Manifest</a>
+            <a href="/health" class="test-link" target="_blank">Health Check</a>
+        </div>
+    </div>
+    <script>
+        document.getElementById('addonUrl').value = window.location.origin + '/manifest.json';
+    </script>
+</body>
+</html>`;
 
 // Load manifest from file
 const manifestPath = path.join(__dirname, 'manifest.json');
@@ -17,7 +79,7 @@ const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
 const builder = new addonBuilder(manifest);
 
-// Handlers remain the same as before
+// Handlers
 builder.defineCatalogHandler(async ({ type, id, extra }) => {
     console.log(`Request for ${type} catalog: ${id}`);
     try {
@@ -89,7 +151,10 @@ module.exports = async (req, res) => {
         console.error('Error handling request:', error);
         if (!res.headersSent) {
             res.statusCode = 500;
-            res.end(JSON.stringify({ error: 'Internal Server Error' }));
+            res.end(JSON.stringify({ 
+                error: 'Internal Server Error',
+                message: error.message
+            }));
         }
     }
 };
