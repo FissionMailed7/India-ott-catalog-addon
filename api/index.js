@@ -128,7 +128,10 @@ module.exports = async (req, res) => {
 
     // Handle manifest request
     if (req.url === '/manifest.json' && req.method === 'GET') {
-        return res.json(manifest);
+        console.log('Serving manifest.json');
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        return res.end(JSON.stringify(manifest, null, 2));
     }
 
     // Handle health check
