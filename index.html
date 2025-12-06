@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>India OTT Catalog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .addon-url {
+            width: 100%;
+            padding: 10px;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        .test-links {
+            margin-top: 30px;
+        }
+        .test-links a {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #0066ff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .test-links a:hover {
+            background-color: #0052cc;
+        }
+    </style>
+</head>
+<body>
+    <h1>India OTT Catalog Addon</h1>
+    <p>Add this URL to Stremio:</p>
+    <input type="text" id="addonUrl" class="addon-url" readonly>
+    
+    <div class="test-links">
+        <p>Test Links:</p>
+        <a href="/manifest.json" target="_blank">View Manifest</a>
+        <a href="/health" target="_blank">Health Check</a>
+    </div>
+
+    <script>
+        // Set the current URL in the input field
+        document.getElementById('addonUrl').value = window.location.origin + '/manifest.json';
+    </script>
+</body>
+</html>
