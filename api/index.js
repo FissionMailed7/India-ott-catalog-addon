@@ -1,5 +1,5 @@
 const { addonBuilder, getRouter } = require('stremio-addon-sdk');
-const { scrapeContent } = require('../scrapers');
+const { scrapeContent } = require('./scrapers');
 
 // Define the addon manifest
 const manifest = {
