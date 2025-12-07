@@ -73,22 +73,13 @@ module.exports = async (req, res) => {
   }
 
   try {
-    if (req.url === '/manifest.json' || req.url === '/') {
-      return res.status(200).end(JSON.stringify({
-        id: 'com.simple-movie-catalog',
-        version: '1.0.0',
-        name: 'Simple Movie Catalog',
-        catalogs: [{
-          type: 'movie',
-          id: 'popular-movies',
-          name: 'Popular Movies',
-          genres: ['Popular']
-        }],
-        resources: ['catalog'],
-        types: ['movie'],
-        idPrefixes: ['simple-movie-']
-      }, null, 2));
-    }
+if (req.url === '/manifest.json' || req.url === '/') {
+  const fs = require('fs');
+  const path = require('path');
+  const manifestPath = path.join(__dirname, 'manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  return res.status(200).end(JSON.stringify(manifest, null, 2));
+}
 
     return router(req, res, () => {
       res.statusCode = 404;
