@@ -1,230 +1,102 @@
 const { addonBuilder, getRouter } = require('stremio-addon-sdk');
-const { scrapeContent } = require('../scrapers');
-const fs = require('fs');
-const path = require('path');
+const fetch = require('node-fetch');
 
-// HTML content for the root URL
-const htmlContent = `<!DOCTYPE html>
-<html>
-<head>
-    <title>India OTT Catalog</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center; 
-            padding: 50px; 
-            margin: 0;
-            background-color: #f5f5f5;
-        }
-        h1 { 
-            color: #333; 
-            margin-bottom: 30px;
-        }
-        .addon-url { 
-            margin: 20px auto; 
-            padding: 12px; 
-            width: 80%; 
-            max-width: 500px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            text-align: center;
-        }
-        .test-link { 
-            display: inline-block; 
-            margin: 15px; 
-            padding: 12px 24px; 
-            background: #0070f3; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 5px;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        .test-link:hover {
-            background: #005bb5;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 30px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .links {
-            margin-top: 30px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>India OTT Catalog Addon</h1>
-        <p>Add this URL to Stremio to access Indian OTT content:</p>
-        <input type="text" id="addonUrl" class="addon-url" readonly>
-        <div class="links">
-            <a href="/manifest.json" class="test-link" target="_blank">View Manifest</a>
-            <a href="/health" class="test-link" target="_blank">Health Check</a>
-        </div>
-    </div>
-    <script>
-        document.getElementById('addonUrl').value = window.location.origin + '/manifest.json';
-    </script>
-</body>
-</html>`;
+// Simple in-memory catalog
+const popularMovies = {
+  metas: [
+    {
+      id: 'simple-movie-1',
+      type: 'movie',
+      name: 'The Shawshank Redemption',
+      poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg',
+      posterShape: 'poster',
+      description: 'Framed in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden. During his long stretch in prison, Dufresne comes to be admired by the other inmates -- including an older prisoner named Red -- for his integrity and unquenchable sense of hope.',
+      genres: ['Drama', 'Crime'],
+      releaseInfo: '1994',
+      imdbRating: '9.3',
+      runtime: '142 min'
+    },
+    {
+      id: 'simple-movie-2',
+      type: 'movie',
+      name: 'The Godfather',
+      poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/3bhkrj58Vtu7enYsRolD1fZdja1.jpg',
+      posterShape: 'poster',
+      description: 'Spanning the years 1945 to 1955, a chronicle of the fictional Italian-American Corleone crime family. When organized crime family patriarch, Don Vito Corleone barely survives an attempt on his life, his youngest son, Michael steps in to take care of the would-be killers, launching a campaign of bloody revenge.',
+      genres: ['Drama', 'Crime'],
+      releaseInfo: '1972',
+      imdbRating: '9.2',
+      runtime: '175 min'
+    }
+  ]
+};
 
-// Load manifest from file
-let manifest;
-try {
-    const manifestPath = path.join(__dirname, 'manifest.json');
-    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-} catch (error) {
-    console.error('Error loading manifest.json:', error);
-    // Fallback manifest
-    manifest = {
-        id: 'com.indiaottcatalog.addon',
-        version: '1.0.0',
-        name: 'India OTT Catalog',
-        description: 'A Stremio addon for Indian OTT content',
-        types: ['movie', 'series'],
-        catalogs: [],
-        resources: ['catalog', 'meta', 'stream'],
-        idPrefixes: ['indiaott:']
-    };
-}
-
-const builder = new addonBuilder(manifest);
-
-// Handlers
-builder.defineCatalogHandler(async ({ type, id, extra }) => {
-    console.log(`[Catalog] Request for ${type} catalog: ${id}`);
-    
-    // Return the full catalog data
-    return {
-        metas: [
-            {
-                id: 'indiaott:movie:the-girlfriend',
-                type: 'movie',
-                name: 'The Girlfriend',
-                poster: 'https://via.placeholder.com/300x450?text=The+Girlfriend',
-                posterShape: 'poster',
-                description: 'The Girlfriend - Latest Indian Movie',
-                genres: ['Drama', 'Romance'],
-                releaseInfo: '2023',
-                year: '2023',
-                imdbRating: '7.5',
-                runtime: '120 min',
-                background: 'https://via.placeholder.com/1920x1080?text=The+Girlfriend',
-                logo: 'https://via.placeholder.com/800x200?text=India+OTT',
-                _meta: {
-                    cacheMaxAge: 86400,
-                    staleRevalidate: 172800,
-                    staleError: 172800
-                }
-            },
-            {
-                id: 'indiaott:movie:jolly-llb-3',
-                type: 'movie',
-                name: 'Jolly LLB 3',
-                poster: 'https://via.placeholder.com/300x450?text=Jolly+LLB+3',
-                posterShape: 'poster',
-                description: 'Jolly LLB 3 - The Courtroom Drama',
-                genres: ['Drama', 'Comedy', 'Courtroom'],
-                releaseInfo: '2023',
-                year: '2023',
-                imdbRating: '8.0',
-                runtime: '150 min',
-                background: 'https://via.placeholder.com/1920x1080?text=Jolly+LLB+3',
-                logo: 'https://via.placeholder.com/800x200?text=India+OTT',
-                _meta: {
-                    cacheMaxAge: 86400,
-                    staleRevalidate: 172800,
-                    staleError: 172800
-                }
-            }
-        ]
-    };
+const builder = new addonBuilder({
+  id: 'com.simple-movie-catalog',
+  version: '1.0.0',
+  name: 'Simple Movie Catalog',
+  catalogs: [{
+    type: 'movie',
+    id: 'popular-movies',
+    name: 'Popular Movies'
+  }],
+  resources: ['catalog'],
+  types: ['movie'],
+  idPrefixes: ['simple-movie-']
 });
 
-builder.defineMetaHandler(async (args) => {
-    console.log('Meta request:', args);
-    return null;
+builder.defineCatalogHandler(({ type, id }) => {
+  console.log(`Request for ${type} catalog: ${id}`);
+  return Promise.resolve(popularMovies);
 });
 
-builder.defineStreamHandler(async (args) => {
-    console.log('Stream request:', args);
-    return { streams: [] };
+builder.defineMetaHandler((args) => {
+  console.log('Meta request:', args);
+  return Promise.resolve({ meta: null });
 });
 
 const router = getRouter(builder.getInterface());
 
-// Helper function to set common headers
 function setHeaders(res, contentType = 'application/json') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS, POST');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.setHeader('Content-Type', `${contentType}; charset=utf-8`);
-    res.setHeader('Cache-Control', 'public, max-age=300');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, X-Requested-With');
+  res.setHeader('Content-Type', `${contentType}; charset=utf-8`);
+  res.setHeader('Cache-Control', 'public, max-age=3600');
 }
 
-// Export the serverless function
 module.exports = async (req, res) => {
-    // Set common headers
-    setHeaders(res);
-    
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+  setHeaders(res);
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  try {
+    if (req.url === '/manifest.json' || req.url === '/') {
+      return res.status(200).end(JSON.stringify({
+        id: 'com.simple-movie-catalog',
+        version: '1.0.0',
+        name: 'Simple Movie Catalog',
+        catalogs: [{
+          type: 'movie',
+          id: 'popular-movies',
+          name: 'Popular Movies',
+          genres: ['Popular']
+        }],
+        resources: ['catalog'],
+        types: ['movie'],
+        idPrefixes: ['simple-movie-']
+      }, null, 2));
     }
 
-    // Handle requests
-    try {
-        // Serve static manifest.json
-        if (req.url === '/manifest.json' || req.url.endsWith('manifest.json')) {
-            console.log('Serving manifest.json');
-            res.setHeader('Content-Type', 'application/json; charset=utf-8');
-            return res.status(200).end(JSON.stringify(manifest, null, 2));
-        }
-
-        // Handle root URL
-        if (req.url === '/' || req.url === '') {
-            setHeaders(res, 'text/html');
-            return res.status(200).end(htmlContent);
-        }
-
-        // Handle health check
-        if (req.url === '/health' || req.url.endsWith('/health')) {
-            res.setHeader('Content-Type', 'application/json; charset=utf-8');
-            return res.status(200).end(JSON.stringify({ 
-                status: 'ok', 
-                version: manifest.version,
-                timestamp: new Date().toISOString()
-            }));
-        }
-
-        // Handle other API requests through router
-        return router(req, res, () => {
-            if (!res.headersSent) {
-                res.statusCode = 404;
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.end(JSON.stringify({ 
-                    error: 'Not Found',
-                    message: 'Endpoint not found'
-                }));
-            }
-        });
-    } catch (error) {
-        console.error('Error handling request:', error);
-        if (!res.headersSent) {
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'application/json; charset=utf-8');
-            res.end(JSON.stringify({ 
-                error: 'Internal Server Error',
-                message: error.message,
-                timestamp: new Date().toISOString()
-            }));
-        }
-    }
+    return router(req, res, () => {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ error: 'Not Found' }));
+    });
+  } catch (err) {
+    console.error(err);
+    res.statusCode = 500;
+    res.end(JSON.stringify({ error: 'Server Error' }));
+  }
 };

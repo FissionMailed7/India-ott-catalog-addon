@@ -1,54 +1,17 @@
 {
-  "id": "com.indiaottcatalog.addon",
+  "id": "com.simple-movie-catalog",
   "version": "1.0.0",
-  "name": "India OTT Catalog",
-  "description": "A Stremio addon for Indian OTT content including South Indian movies and Aha OTT",
-  "types": ["movie", "series"],
+  "name": "Simple Movie Catalog",
+  "description": "A simple Stremio addon that shows popular movies",
+  "types": ["movie"],
   "catalogs": [
     {
       "type": "movie",
-      "id": "indian-movies",
-      "name": "Indian Movies",
-      "genres": ["Indian", "Bollywood", "South Indian", "Tollywood", "Kollywood", "Mollywood", "Sandwood"],
-      "extra": [
-        {
-          "name": "search",
-          "isRequired": false
-        },
-        {
-          "name": "genre",
-          "isRequired": false
-        },
-        {
-          "name": "skip",
-          "isRequired": false
-        }
-      ]
-    },
-    {
-      "type": "series",
-      "id": "indian-series",
-      "name": "Indian Series",
-      "genres": ["Indian", "Bollywood", "South Indian", "Tollywood", "Kollywood", "Mollywood", "Sandwood"],
-      "extra": [
-        {
-          "name": "search",
-          "isRequired": false
-        },
-        {
-          "name": "genre",
-          "isRequired": false
-        },
-        {
-          "name": "skip",
-          "isRequired": false
-        }
-      ]
+      "id": "popular-movies",
+      "name": "Popular Movies",
+      "genres": ["Popular"]
     }
   ],
-  "resources": ["catalog", "meta", "stream"],
-  "idPrefixes": ["indiaott:"],
-  "contactEmail": "indiaottaddon@gmail.com",
-  "icon": "https://raw.githubusercontent.com/FissionMailed7/india-ott-catalog-addon/main/assets/icon.png",
-  "background": "https://raw.githubusercontent.com/FissionMailed7/india-ott-catalog-addon/main/assets/background.jpg"
+  "resources": ["catalog"],
+  "idPrefixes": ["simple-movie-"]
 }
