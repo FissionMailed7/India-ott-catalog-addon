@@ -99,13 +99,90 @@ const builder = new addonBuilder(manifest);
 
 // Handlers
 builder.defineCatalogHandler(async ({ type, id, extra }) => {
-    console.log(`Request for ${type} catalog: ${id}`);
+    console.log(`[Catalog] Request for ${type} catalog: ${id}`);
     try {
-        const content = await scrapeContent(type, id);
-        return { metas: content };
+        console.log(`[Catalog] Fetching content for ${type} with ID: ${id}`);
+        let content = [];
+        
+        try {
+            content = await scrapeContent(type, id);
+        } catch (scrapeError) {
+            console.error('[Catalog] Error in scrapeContent:', scrapeError);
+            // Fallback to test data if scraping fails
+            content = [{
+                id: `indiaott:${type}:test-1`,
+                type: type,
+                name: `Test ${type === 'movie' ? 'Movie' : 'Series'} 1`,
+                poster: type === 'movie' 
+                    ? 'https://via.placeholder.com/300x450?text=Test+Movie' 
+                    : 'https://via.placeholder.com/300x450?text=Test+Series',
+                posterShape: 'poster',
+                description: 'This is a test item. The actual scraper failed to fetch data.',
+                genres: ['Test'],
+                releaseInfo: '2023',
+                links: [{ url: 'https://example.com', name: 'Example' }]
+            }];
+        }
+        
+        // Ensure content is an array
+        if (!Array.isArray(content)) {
+            console.error('[Catalog] Content is not an array:', content);
+            content = [];
+        }
+        
+        // Log the first item for debugging
+        if (content.length > 0) {
+            console.log(`[Catalog] First item in response:`, JSON.stringify(content[0], null, 2));
+        } else {
+            console.log(`[Catalog] No content returned for ${type}/${id}`);
+            // Add a test item if no content is available
+            content = [{
+                id: `indiaott:${type}:test-1`,
+                type: type,
+                name: `Test ${type === 'movie' ? 'Movie' : 'Series'} 1`,
+                poster: type === 'movie' 
+                    ? 'https://via.placeholder.com/300x450?text=Test+Movie' 
+                    : 'https://via.placeholder.com/300x450?text=Test+Series',
+                posterShape: 'poster',
+                description: 'This is a test item. No content was available.',
+                genres: ['Test'],
+                releaseInfo: '2023'
+            }];
+        }
+        
+        // Ensure all items have required fields
+        const validatedContent = content.map(item => ({
+            id: item.id || `indiaott:${type}:${Math.random().toString(36).substr(2, 9)}`,
+            type: item.type || type,
+            name: item.name || 'Untitled',
+            poster: item.poster || (type === 'movie' 
+                ? 'https://via.placeholder.com/300x450?text=No+Poster' 
+                : 'https://via.placeholder.com/300x450?text=No+Poster'),
+            posterShape: item.posterShape || 'poster',
+            description: item.description || 'No description available.',
+            genres: Array.isArray(item.genres) ? item.genres : ['Uncategorized'],
+            releaseInfo: item.releaseInfo || 'N/A',
+            links: Array.isArray(item.links) ? item.links : []
+        }));
+        
+        console.log(`[Catalog] Returning ${validatedContent.length} items`);
+        return { metas: validatedContent };
     } catch (error) {
-        console.error('Error in catalog handler:', error);
-        return { metas: [] };
+        console.error('[Catalog] Error in catalog handler:', error);
+        console.error(error.stack);
+        // Return a test item even in case of error
+        return {
+            metas: [{
+                id: `indiaott:${type || 'unknown'}:error-${Date.now()}`,
+                type: type || 'movie',
+                name: 'Error Loading Content',
+                poster: 'https://via.placeholder.com/300x450?text=Error+Loading',
+                posterShape: 'poster',
+                description: 'There was an error loading the content. Please check the logs for more information.',
+                genres: ['Error'],
+                releaseInfo: 'N/A'
+            }]
+        };
     }
 });
 
