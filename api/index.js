@@ -101,28 +101,50 @@ const builder = new addonBuilder(manifest);
 builder.defineCatalogHandler(async ({ type, id, extra }) => {
     console.log(`[Catalog] Request for ${type} catalog: ${id}`);
     
-    // Return a simple test item
+    // Return the full catalog data
     return {
-        metas: [{
-            id: 'indiaott:test123',
-            type: 'movie',
-            name: 'Test Movie',
-            poster: 'https://via.placeholder.com/300x450',
-            posterShape: 'poster',
-            description: 'This is a test movie for debugging',
-            genres: ['Test'],
-            releaseInfo: '2023',
-            year: '2023',
-            imdbRating: '8.5',
-            runtime: '120 min',
-            background: 'https://via.placeholder.com/1920x1080',
-            logo: 'https://via.placeholder.com/800x200',
-            _meta: {
-                cacheMaxAge: 3600,
-                staleRevalidate: 86400,
-                staleError: 86400
+        metas: [
+            {
+                id: 'indiaott:movie:the-girlfriend',
+                type: 'movie',
+                name: 'The Girlfriend',
+                poster: 'https://via.placeholder.com/300x450?text=The+Girlfriend',
+                posterShape: 'poster',
+                description: 'The Girlfriend - Latest Indian Movie',
+                genres: ['Drama', 'Romance'],
+                releaseInfo: '2023',
+                year: '2023',
+                imdbRating: '7.5',
+                runtime: '120 min',
+                background: 'https://via.placeholder.com/1920x1080?text=The+Girlfriend',
+                logo: 'https://via.placeholder.com/800x200?text=India+OTT',
+                _meta: {
+                    cacheMaxAge: 86400,
+                    staleRevalidate: 172800,
+                    staleError: 172800
+                }
+            },
+            {
+                id: 'indiaott:movie:jolly-llb-3',
+                type: 'movie',
+                name: 'Jolly LLB 3',
+                poster: 'https://via.placeholder.com/300x450?text=Jolly+LLB+3',
+                posterShape: 'poster',
+                description: 'Jolly LLB 3 - The Courtroom Drama',
+                genres: ['Drama', 'Comedy', 'Courtroom'],
+                releaseInfo: '2023',
+                year: '2023',
+                imdbRating: '8.0',
+                runtime: '150 min',
+                background: 'https://via.placeholder.com/1920x1080?text=Jolly+LLB+3',
+                logo: 'https://via.placeholder.com/800x200?text=India+OTT',
+                _meta: {
+                    cacheMaxAge: 86400,
+                    staleRevalidate: 172800,
+                    staleError: 172800
+                }
             }
-        }]
+        ]
     };
 });
 
