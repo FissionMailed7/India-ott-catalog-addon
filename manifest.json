@@ -1,0 +1,17 @@
+{
+  "id": "com.simple-movie-catalog",
+  "version": "1.0.0",
+  "name": "Simple Movie Catalog",
+  "description": "A simple Stremio addon that shows popular movies",
+  "types": ["movie"],
+  "catalogs": [
+    {
+      "type": "movie",
+      "id": "popular-movies",
+      "name": "Popular Movies",
+      "genres": ["Popular"]
+    }
+  ],
+  "resources": ["catalog", "meta"],
+  "idPrefixes": ["simple-movie-"]
+}
