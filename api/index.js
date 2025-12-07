@@ -100,119 +100,30 @@ const builder = new addonBuilder(manifest);
 // Handlers
 builder.defineCatalogHandler(async ({ type, id, extra }) => {
     console.log(`[Catalog] Request for ${type} catalog: ${id}`);
-    try {
-        console.log(`[Catalog] Fetching content for ${type} with ID: ${id}`);
-        let content = [];
-        
-        try {
-            content = await scrapeContent(type, id);
-        } catch (scrapeError) {
-            console.error('[Catalog] Error in scrapeContent:', scrapeError);
-            // Fallback to test data if scraping fails
-            content = [{
-                id: `indiaott:${type}:test-1`,
-                type: type,
-                name: `Test ${type === 'movie' ? 'Movie' : 'Series'} 1`,
-                poster: type === 'movie' 
-                    ? 'https://via.placeholder.com/300x450?text=Test+Movie' 
-                    : 'https://via.placeholder.com/300x450?text=Test+Series',
-                posterShape: 'poster',
-                description: 'This is a test item. The actual scraper failed to fetch data.',
-                genres: ['Test'],
-                releaseInfo: '2023',
-                links: [{ url: 'https://example.com', name: 'Example' }]
-            }];
-        }
-        
-        // Ensure content is an array
-        if (!Array.isArray(content)) {
-            console.error('[Catalog] Content is not an array:', content);
-            content = [];
-        }
-        
-        // Log the first item for debugging
-        if (content.length > 0) {
-            console.log(`[Catalog] First item in response:`, JSON.stringify(content[0], null, 2));
-        } else {
-            console.log(`[Catalog] No content returned for ${type}/${id}`);
-            // Add a test item if no content is available
-            content = [{
-                id: `indiaott:${type}:test-1`,
-                type: type,
-                name: `Test ${type === 'movie' ? 'Movie' : 'Series'} 1`,
-                poster: type === 'movie' 
-                    ? 'https://via.placeholder.com/300x450?text=Test+Movie' 
-                    : 'https://via.placeholder.com/300x450?text=Test+Series',
-                posterShape: 'poster',
-                description: 'This is a test item. No content was available.',
-                genres: ['Test'],
-                releaseInfo: '2023'
-            }];
-        }
-        
-        // Ensure all items have required fields and add additional metadata
-        const validatedContent = content.map((item, index) => {
-            // Generate a consistent ID if not provided
-            const itemId = item.id || `indiaott:${type}:${Date.now()}-${index}`;
-            const name = item.name || 'Untitled';
-            const description = item.description || `Watch ${name} on India OTT Catalog`;
-            const year = item.year || (item.releaseInfo ? item.releaseInfo.match(/\d{4}/)?.[0] : '2023');
-            
-            return {
-                // Required fields
-                id: itemId,
-                type: item.type || type,
-                name: name,
-                poster: item.poster || (type === 'movie' 
-                    ? 'https://via.placeholder.com/300x450?text=' + encodeURIComponent(name.substring(0, 15))
-                    : 'https://via.placeholder.com/300x450?text=' + encodeURIComponent(name.substring(0, 15))),
-                posterShape: item.posterShape || 'poster',
-                
-                // Recommended fields
-                description: description,
-                genres: Array.isArray(item.genres) && item.genres.length > 0 ? item.genres : ['Indian'],
-                releaseInfo: item.releaseInfo || year || '2023',
-                
-                // Additional metadata
-                year: item.year || year || '2023',
-                imdbRating: item.imdbRating || '',
-                runtime: item.runtime || '120 min',
-                
-                // Links and other data
-                links: Array.isArray(item.links) ? item.links : [],
-                
-                // Stremio specific
-                background: item.background || 'https://via.placeholder.com/1920x1080?text=' + encodeURIComponent(name),
-                logo: item.logo || 'https://via.placeholder.com/800x200?text=India+OTT',
-                
-                // Ensure these are always present
-                _meta: {
-                    cacheMaxAge: 3600,
-                    staleRevalidate: 86400,
-                    staleError: 86400
-                }
-            };
-        });
-        
-        console.log(`[Catalog] Returning ${validatedContent.length} items`);
-        return { metas: validatedContent };
-    } catch (error) {
-        console.error('[Catalog] Error in catalog handler:', error);
-        console.error(error.stack);
-        // Return a test item even in case of error
-        return {
-            metas: [{
-                id: `indiaott:${type || 'unknown'}:error-${Date.now()}`,
-                type: type || 'movie',
-                name: 'Error Loading Content',
-                poster: 'https://via.placeholder.com/300x450?text=Error+Loading',
-                posterShape: 'poster',
-                description: 'There was an error loading the content. Please check the logs for more information.',
-                genres: ['Error'],
-                releaseInfo: 'N/A'
-            }]
-        };
-    }
+    
+    // Return a simple test item
+    return {
+        metas: [{
+            id: 'indiaott:test123',
+            type: 'movie',
+            name: 'Test Movie',
+            poster: 'https://via.placeholder.com/300x450',
+            posterShape: 'poster',
+            description: 'This is a test movie for debugging',
+            genres: ['Test'],
+            releaseInfo: '2023',
+            year: '2023',
+            imdbRating: '8.5',
+            runtime: '120 min',
+            background: 'https://via.placeholder.com/1920x1080',
+            logo: 'https://via.placeholder.com/800x200',
+            _meta: {
+                cacheMaxAge: 3600,
+                staleRevalidate: 86400,
+                staleError: 86400
+            }
+        }]
+    };
 });
 
 builder.defineMetaHandler(async (args) => {
