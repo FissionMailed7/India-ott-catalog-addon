@@ -19,5 +19,8 @@
     }
   ],
   "resources": ["catalog", "meta", "stream"],
-  "idPrefixes": ["indiaott:"]
+  "idPrefixes": ["indiaott:"],
+  "contactEmail": "indiaottaddon@gmail.com",
+  "icon": "https://raw.githubusercontent.com/FissionMailed7/india-ott-catalog-addon/main/assets/icon.png",
+  "background": "https://raw.githubusercontent.com/FissionMailed7/india-ott-catalog-addon/main/assets/background.jpg"
 }

@@ -18,3 +18,5 @@ Thumbs.db
 # IDE specific files
 .vscode/
 .idea/
+.vercel
+.env*.local

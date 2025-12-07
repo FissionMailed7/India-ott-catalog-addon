@@ -2,6 +2,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const memoize = require('memoizee');
 const config = require('../config');
+const { scrapeFlixPatrol } = require('./flixpatrol');
 
 // Create a memoized version of the fetch function with caching
 const memoizedFetch = memoize(
@@ -84,25 +85,39 @@ const MOCK_CONTENT = {
 async function scrapeContent(type, catalogId) {
     console.log(`[scrapeContent] Fetching ${type} content for catalog: ${catalogId}`);
     
-    const results = [];
+
+    let results = [];
     const contentPromises = [];
 
-    // Filter platforms based on catalog ID if needed
+
+    // 1. Scrape FlixPatrol
+    const flixPatrolPromise = scrapeFlixPatrol(type)
+        .then(items => {
+            console.log(`[scrapeContent] Got ${items.length} items from FlixPatrol`);
+            results = results.concat(items);
+        })
+        .catch(error => {
+            console.error(`[scrapeContent] Error scraping FlixPatrol:`, error.message);
+        });
+    contentPromises.push(flixPatrolPromise);
+
+    // 2. Scrape API sources (placeholder)
+    // Example: await scrapeApiSource(type)
+
+    // 3. Scrape direct platforms (existing logic)
     const platformsToScrape = config.platforms.filter(platform => {
         if (catalogId === 'south-indian') {
             return ['aha', 'sun-nxt'].includes(platform.id);
         }
         return true;
     });
-
-    // Create promises for each platform
     for (const platform of platformsToScrape) {
         const url = `${platform.baseUrl}${type === 'movie' ? platform.moviePath : platform.seriesPath}`;
         contentPromises.push(
             scrapePlatform(platform, url, type)
                 .then(items => {
                     console.log(`[scrapeContent] Got ${items.length} items from ${platform.name}`);
-                    results.push(...items);
+                    results = results.concat(items);
                 })
                 .catch(error => {
                     console.error(`[scrapeContent] Error scraping ${platform.name}:`, error.message);
@@ -110,13 +125,22 @@ async function scrapeContent(type, catalogId) {
         );
     }
 
-    // Wait for all platform scrapes to complete
+    // Wait for all scrapes to complete
     await Promise.allSettled(contentPromises);
 
-    // If no results from scraping, use mock data for demo
+    // Deduplicate by name + type
+    const seen = new Set();
+    results = results.filter(item => {
+        const key = item.type + ':' + item.name;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+
+    // If no results, use mock data
     if (results.length === 0) {
         console.log(`[scrapeContent] No content found, using mock data for ${type}`);
-        results.push(...(MOCK_CONTENT[type] || []));
+        results = (MOCK_CONTENT[type] || []);
     }
 
     // Sort by release date (newest first)
