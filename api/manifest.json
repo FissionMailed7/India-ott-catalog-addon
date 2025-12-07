@@ -12,6 +12,6 @@
       "genres": ["Popular"]
     }
   ],
-  "resources": ["catalog"],
+  "resources": ["catalog", "meta"],
   "idPrefixes": ["simple-movie-"]
 }
