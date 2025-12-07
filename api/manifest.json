@@ -9,13 +9,41 @@
       "type": "movie",
       "id": "indian-movies",
       "name": "Indian Movies",
-      "genres": ["Indian", "Bollywood", "South Indian", "Tollywood", "Kollywood", "Mollywood", "Sandwood"]
+      "genres": ["Indian", "Bollywood", "South Indian", "Tollywood", "Kollywood", "Mollywood", "Sandwood"],
+      "extra": [
+        {
+          "name": "search",
+          "isRequired": false
+        },
+        {
+          "name": "genre",
+          "isRequired": false
+        },
+        {
+          "name": "skip",
+          "isRequired": false
+        }
+      ]
     },
     {
       "type": "series",
       "id": "indian-series",
       "name": "Indian Series",
-      "genres": ["Indian", "Bollywood", "South Indian", "Tollywood", "Kollywood", "Mollywood", "Sandwood"]
+      "genres": ["Indian", "Bollywood", "South Indian", "Tollywood", "Kollywood", "Mollywood", "Sandwood"],
+      "extra": [
+        {
+          "name": "search",
+          "isRequired": false
+        },
+        {
+          "name": "genre",
+          "isRequired": false
+        },
+        {
+          "name": "skip",
+          "isRequired": false
+        }
+      ]
     }
   ],
   "resources": ["catalog", "meta", "stream"],
