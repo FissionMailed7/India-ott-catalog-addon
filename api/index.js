@@ -40,7 +40,7 @@ const builder = new addonBuilder({
     id: 'popular-movies',
     name: 'Popular Movies'
   }],
-  resources: ['catalog'],
+  resources: ['catalog', 'meta'],
   types: ['movie'],
   idPrefixes: ['simple-movie-']
 });
