@@ -59,7 +59,7 @@ module.exports = {
     // Get your free API key from: https://www.themoviedb.org/settings/api
     // Set TMDB_API_KEY environment variable or replace the key below
     tmdb: {
-        apiKey: process.env.TMDB_API_KEY || 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmZjQ0ZjY5NDliMGUxMzY2NGY4MmU4MzY4ZjZjMjBmZSIsIm5iZiI6MTY5NjY4NjA5My44LCJzdWIiOiI2NWYwODU1MmQ4ZjdmNTAwMTk0ZjQ5ZjgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.VlDgHDl8wJ3-7b8m9zq8nq8nq8nq8nq8nq8nq8nq8', // Demo key - replace with your own
+        apiKey: process.env.TMDB_API_KEY || '7f61bc0d51bd23329dcc1b50fa611b8f', // Your TMDB API key
         baseUrl: 'https://api.themoviedb.org/3',
         imageBaseUrl: 'https://image.tmdb.org/t/p',
         posterSize: 'w500', // w92, w154, w185, w342, w500, w780, original
