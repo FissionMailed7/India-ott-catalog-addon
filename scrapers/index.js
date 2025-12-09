@@ -3,6 +3,7 @@ const cheerio = require('cheerio');
 const memoize = require('memoizee');
 const config = require('../config');
 const { scrapeFlixPatrol } = require('./flixpatrol');
+const tmdbService = require('./tmdb');
 
 // Create a memoized version of the fetch function with caching
 const memoizedFetch = memoize(
@@ -185,6 +186,16 @@ async function scrapeContent(type, catalogId) {
     if (results.length === 0) {
         console.log(`[scrapeContent] No content found, using mock data for ${type}`);
         results = (MOCK_CONTENT[type] || []);
+    }
+
+    // Enrich content with TMDB metadata (posters, descriptions, etc.)
+    console.log(`[scrapeContent] Enriching ${results.length} items with TMDB metadata`);
+    try {
+        results = await tmdbService.enrichContent(results);
+        console.log(`[scrapeContent] Successfully enriched content with TMDB data`);
+    } catch (error) {
+        console.error(`[scrapeContent] Error enriching content with TMDB:`, error.message);
+        // Continue with unenriched data if TMDB fails
     }
 
     // Sort by release date (newest first)
