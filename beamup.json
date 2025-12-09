@@ -1,12 +1,4 @@
 {
-    "name": "india-ott-catalog-addon",
-    "version": "1.0.0",
-    "description": "A Stremio addon for South Indian OTT content",
-    "main": "api/index.js",
-    "scripts": {
-        "start": "node api/index.js"
-    },
-    "engines": {
-        "node": ">=14.0.0"
-    }
+    "projectName": "india-ott-catalog-addon",
+    "lastCommit": "8c0c51f"
 }

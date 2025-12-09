@@ -1,5 +1,5 @@
 const { addonBuilder, getRouter } = require('stremio-addon-sdk');
-const fetch = require('node-fetch');
+const express = require('express');
 const { scrapeContent } = require('../scrapers');
 
 // Cache for scraped content
@@ -69,48 +69,51 @@ builder.defineMetaHandler((args) => {
   return Promise.resolve({ meta: null });
 });
 
+const app = express();
 const router = getRouter(builder.getInterface());
 
-function setHeaders(res, contentType = 'application/json') {
+// Middleware
+app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, X-Requested-With');
-  res.setHeader('Content-Type', `${contentType}; charset=utf-8`);
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'public, max-age=3600');
-}
+  next();
+});
 
-module.exports = async (req, res) => {
-  setHeaders(res);
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  try {
-if (req.url === '/manifest.json' || req.url === '/') {
+// Routes
+app.get('/manifest.json', (req, res) => {
   const fs = require('fs');
   const path = require('path');
   const manifestPath = path.join(__dirname, 'manifest.json');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  return res.status(200).end(JSON.stringify(manifest, null, 2));
-}
+  res.json(manifest);
+});
 
-    // Health check endpoint for BeamUp
-    if (req.url === '/health') {
-      return res.status(200).end(JSON.stringify({
-        status: 'ok',
-        version: '1.0.0',
-        timestamp: new Date().toISOString()
-      }));
-    }
+app.get('/', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  const manifestPath = path.join(__dirname, 'manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  res.json(manifest);
+});
 
-    return router(req, res, () => {
-      res.statusCode = 404;
-      res.end(JSON.stringify({ error: 'Not Found' }));
-    });
-  } catch (err) {
-    console.error(err);
-    res.statusCode = 500;
-    res.end(JSON.stringify({ error: 'Server Error' }));
-  }
-};
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Use Stremio router
+app.use(router);
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`South Indian OTT Catalog addon listening on port ${PORT}`);
+});
+
+module.exports = app;
