@@ -35,7 +35,7 @@ const memoizedFetch = memoize(
     }
 );
 
-// Mock data for development - remove or update in production
+// Mock data for South Indian content - used as fallback when scraping fails
 const MOCK_CONTENT = {
     movie: [
         {
@@ -44,8 +44,8 @@ const MOCK_CONTENT = {
             name: 'RRR',
             poster: 'https://via.placeholder.com/300x450?text=RRR',
             posterShape: 'poster',
-            description: 'An action drama film about two revolutionaries',
-            genres: ['Action', 'Drama', 'South Indian'],
+            description: 'An epic action drama about two revolutionaries in 1920s India fighting against British oppression',
+            genres: ['Action', 'Drama', 'South Indian', 'Telugu', 'Historical'],
             releaseInfo: '2022',
             links: []
         },
@@ -53,10 +53,32 @@ const MOCK_CONTENT = {
             id: 'indiaott:mock:movie:2',
             type: 'movie',
             name: 'KGF Chapter 2',
-            poster: 'https://via.placeholder.com/300x450?text=KGF',
+            poster: 'https://via.placeholder.com/300x450?text=KGF+2',
             posterShape: 'poster',
-            description: 'A sequel to the Kannada action-thriller',
-            genres: ['Action', 'Thriller', 'South Indian'],
+            description: 'Rocky embarks on a quest to become the wealthiest man in the world, continuing his blood-soaked campaign',
+            genres: ['Action', 'Thriller', 'South Indian', 'Kannada'],
+            releaseInfo: '2022',
+            links: []
+        },
+        {
+            id: 'indiaott:mock:movie:3',
+            type: 'movie',
+            name: 'Ponniyin Selvan: I',
+            poster: 'https://via.placeholder.com/300x450?text=PS1',
+            posterShape: 'poster',
+            description: 'A historical epic based on Kalki Krishnamurthy\'s novel about the Chola dynasty',
+            genres: ['Drama', 'Historical', 'South Indian', 'Tamil'],
+            releaseInfo: '2022',
+            links: []
+        },
+        {
+            id: 'indiaott:mock:movie:4',
+            type: 'movie',
+            name: 'Oh My Dog',
+            poster: 'https://via.placeholder.com/300x450?text=Oh+My+Dog',
+            posterShape: 'poster',
+            description: 'A heartwarming story of a man who can talk to dogs, directed by Sarov Shanmugam',
+            genres: ['Comedy', 'Drama', 'South Indian', 'Tamil'],
             releaseInfo: '2022',
             links: []
         }
@@ -65,12 +87,34 @@ const MOCK_CONTENT = {
         {
             id: 'indiaott:mock:series:1',
             type: 'series',
-            name: 'Paatal Lok',
-            poster: 'https://via.placeholder.com/300x450?text=PaatalLok',
+            name: 'Sacred Games',
+            poster: 'https://via.placeholder.com/300x450?text=Sacred+Games',
             posterShape: 'poster',
-            description: 'A gritty crime drama web series',
-            genres: ['Crime', 'Drama'],
-            releaseInfo: '2020',
+            description: 'A link in their pasts leads an honest cop to a fugitive gangster',
+            genres: ['Crime', 'Drama', 'Thriller'],
+            releaseInfo: '2018',
+            links: []
+        },
+        {
+            id: 'indiaott:mock:series:2',
+            type: 'series',
+            name: 'Mirzapur',
+            poster: 'https://via.placeholder.com/300x450?text=Mirzapur',
+            posterShape: 'poster',
+            description: 'A shocking incident at a wedding procession ignites a series of events entangling the lives',
+            genres: ['Crime', 'Drama', 'Thriller'],
+            releaseInfo: '2018',
+            links: []
+        },
+        {
+            id: 'indiaott:mock:series:3',
+            type: 'series',
+            name: 'Gandii Baat',
+            poster: 'https://via.placeholder.com/300x450?text=Gandii+Baat',
+            posterShape: 'poster',
+            description: 'The bizarre, funny and heartwarming stories from the lives of 4 Gujarati families',
+            genres: ['Comedy', 'Drama'],
+            releaseInfo: '2018',
             links: []
         }
     ]

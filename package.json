@@ -4,7 +4,7 @@
   "description": "A Stremio addon for Indian OTT content including South Indian movies and Aha OTT",
   "main": "api/index.js",
   "scripts": {
-    "start": "node local-server.js",
+    "start": "node api/index.js",
     "dev": "nodemon local-server.js",
     "vercel-dev": "vercel dev",
     "test": "echo \"Error: no test specified\" && exit 1"

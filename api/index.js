@@ -1,53 +1,67 @@
 const { addonBuilder, getRouter } = require('stremio-addon-sdk');
 const fetch = require('node-fetch');
+const { scrapeContent } = require('../scrapers');
 
-// Simple in-memory catalog
-const popularMovies = {
-  metas: [
-    {
-      id: 'simple-movie-1',
-      type: 'movie',
-      name: 'The Shawshank Redemption',
-      poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg',
-      posterShape: 'poster',
-      description: 'Framed in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden. During his long stretch in prison, Dufresne comes to be admired by the other inmates -- including an older prisoner named Red -- for his integrity and unquenchable sense of hope.',
-      genres: ['Drama', 'Crime'],
-      releaseInfo: '1994',
-      imdbRating: '9.3',
-      runtime: '142 min'
-    },
-    {
-      id: 'simple-movie-2',
-      type: 'movie',
-      name: 'The Godfather',
-      poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/3bhkrj58Vtu7enYsRolD1fZdja1.jpg',
-      posterShape: 'poster',
-      description: 'Spanning the years 1945 to 1955, a chronicle of the fictional Italian-American Corleone crime family. When organized crime family patriarch, Don Vito Corleone barely survives an attempt on his life, his youngest son, Michael steps in to take care of the would-be killers, launching a campaign of bloody revenge.',
-      genres: ['Drama', 'Crime'],
-      releaseInfo: '1972',
-      imdbRating: '9.2',
-      runtime: '175 min'
-    }
-  ]
-};
+// Cache for scraped content
+const contentCache = new Map();
+const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 
 const builder = new addonBuilder({
-  id: 'com.simple-movie-catalog',
+  id: 'com.south-indian-ott-catalog',
   version: '1.0.0',
-  name: 'Simple Movie Catalog',
-  catalogs: [{
-    type: 'movie',
-    id: 'popular-movies',
-    name: 'Popular Movies'
-  }],
+  name: 'South Indian OTT Catalog',
+  catalogs: [
+    {
+      type: 'movie',
+      id: 'south-indian-movies',
+      name: 'South Indian Movies'
+    },
+    {
+      type: 'series',
+      id: 'south-indian-series',
+      name: 'South Indian Series'
+    }
+  ],
   resources: ['catalog', 'meta'],
-  types: ['movie'],
-  idPrefixes: ['simple-movie-']
+  types: ['movie', 'series'],
+  idPrefixes: ['indiaott:']
 });
 
-builder.defineCatalogHandler(({ type, id }) => {
+builder.defineCatalogHandler(async ({ type, id }) => {
   console.log(`Request for ${type} catalog: ${id}`);
-  return Promise.resolve(popularMovies);
+
+  const cacheKey = `${type}-${id}`;
+  const cached = contentCache.get(cacheKey);
+
+  if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+    console.log(`Serving cached content for ${cacheKey}`);
+    return Promise.resolve({ metas: cached.metas });
+  }
+
+  try {
+    const content = await scrapeContent(type, id);
+    const metas = content.map(item => ({
+      id: item.id,
+      type: item.type,
+      name: item.name,
+      poster: item.poster,
+      posterShape: item.posterShape,
+      description: item.description,
+      genres: item.genres,
+      releaseInfo: item.releaseInfo
+    }));
+
+    // Cache the result
+    contentCache.set(cacheKey, {
+      metas,
+      timestamp: Date.now()
+    });
+
+    return Promise.resolve({ metas });
+  } catch (error) {
+    console.error(`Error fetching ${type} catalog:`, error.message);
+    return Promise.resolve({ metas: [] });
+  }
 });
 
 builder.defineMetaHandler((args) => {

@@ -1,17 +1,23 @@
 {
-  "id": "com.simple-movie-catalog",
+  "id": "com.south-indian-ott-catalog",
   "version": "1.0.0",
-  "name": "Simple Movie Catalog",
-  "description": "A simple Stremio addon that shows popular movies",
-  "types": ["movie"],
+  "name": "South Indian OTT Catalog",
+  "description": "A Stremio addon for latest South Indian movies and series from Aha, Sun NXT, and other OTT platforms",
+  "types": ["movie", "series"],
   "catalogs": [
     {
       "type": "movie",
-      "id": "popular-movies",
-      "name": "Popular Movies",
-      "genres": ["Popular"]
+      "id": "south-indian-movies",
+      "name": "South Indian Movies",
+      "genres": ["South Indian", "Tamil", "Telugu", "Kannada", "Malayalam"]
+    },
+    {
+      "type": "series",
+      "id": "south-indian-series",
+      "name": "South Indian Series",
+      "genres": ["South Indian", "Tamil", "Telugu", "Kannada", "Malayalam"]
     }
   ],
   "resources": ["catalog", "meta"],
-  "idPrefixes": ["simple-movie-"]
+  "idPrefixes": ["indiaott:"]
 }
