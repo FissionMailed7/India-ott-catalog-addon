@@ -66,5 +66,28 @@ module.exports = {
         backdropSize: 'w780',
         language: 'en-US',
         region: 'IN' // India region for better results
+    },
+
+    // Debrid services configuration
+    debrid: {
+        // Set your API keys as environment variables
+        realDebrid: {
+            apiKey: process.env.REAL_DEBRID_API_KEY || '',
+            baseUrl: 'https://api.real-debrid.com/rest/1.0'
+        },
+        torbox: {
+            apiKey: process.env.TORBOX_API_KEY || '',
+            baseUrl: 'https://api.torbox.app/v1/api'
+        },
+        allDebrid: {
+            apiKey: process.env.ALL_DEBRID_API_KEY || '',
+            baseUrl: 'https://api.alldebrid.com/v4'
+        },
+        premiumize: {
+            apiKey: process.env.PREMIUMIZE_API_KEY || '',
+            baseUrl: 'https://www.premiumize.me/api'
+        },
+        // Enable/disable services
+        enabledServices: ['realDebrid', 'torbox', 'allDebrid', 'premiumize']
     }
 };

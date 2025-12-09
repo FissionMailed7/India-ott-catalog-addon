@@ -18,6 +18,6 @@
       "genres": ["South Indian", "Tamil", "Telugu", "Kannada", "Malayalam"]
     }
   ],
-  "resources": ["catalog", "meta"],
+  "resources": ["catalog", "meta", "stream"],
   "idPrefixes": ["indiaott:"]
 }
