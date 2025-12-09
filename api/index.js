@@ -79,56 +79,99 @@ builder.defineMetaHandler(async (args) => {
       return { meta: null };
     }
 
-    // Extract TMDB ID from our custom ID format
+    let meta = null;
+
+    // Try TMDB ID format first: indiaott:tmdb:movie:123
     const tmdbMatch = id.match(/indiaott:tmdb:(\w+):(\d+)/);
-    if (!tmdbMatch) {
+    if (tmdbMatch) {
+      const [, contentType, tmdbId] = tmdbMatch;
+      const tmdbType = contentType === 'movie' ? 'movie' : 'tv';
+
+      // Get detailed info from TMDB
+      const details = await tmdbService.getDetails(parseInt(tmdbId), tmdbType);
+
+      if (details) {
+        // Format for Stremio
+        meta = {
+          id: id,
+          type: type,
+          name: details.title || details.name,
+          poster: tmdbService.getPosterUrl(details.poster_path),
+          background: tmdbService.getBackdropUrl(details.backdrop_path),
+          description: details.overview,
+          genres: details.genres ? details.genres.map(g => g.name) : [],
+          releaseInfo: tmdbType === 'movie'
+            ? (details.release_date ? new Date(details.release_date).getFullYear().toString() : '')
+            : (details.first_air_date ? new Date(details.first_air_date).getFullYear().toString() : ''),
+          imdbRating: details.vote_average ? details.vote_average.toString() : null,
+          runtime: tmdbType === 'movie' && details.runtime ? `${details.runtime} min` : null,
+          language: details.original_language,
+          country: details.origin_country ? details.origin_country[0] : null
+        };
+
+        // Add series-specific info
+        if (tmdbType === 'tv') {
+          meta.status = details.status;
+          meta.numberOfSeasons = details.number_of_seasons;
+          meta.seasons = details.seasons ? details.seasons.map(season => ({
+            season: season.season_number,
+            title: season.name,
+            episodeCount: season.episode_count,
+            airDate: season.air_date,
+            description: season.overview,
+            poster: tmdbService.getPosterUrl(season.poster_path)
+          })) : [];
+        }
+      }
+    }
+
+    // If TMDB failed or not a TMDB ID, try to create basic metadata from the ID
+    if (!meta) {
+      // Handle other ID formats like indiaott:mock:movie:1 or indiaott:aha:movie:0
+      const parts = id.split(':');
+      if (parts.length >= 3) {
+        const contentType = parts[2]; // movie or series
+        const contentName = parts.slice(3).join(' ') || 'Unknown Title';
+
+        // Try to search TMDB with the available information
+        try {
+          const searchType = contentType === 'movie' ? 'movie' : 'tv';
+          const tmdbResult = await tmdbService.search(contentName, searchType);
+
+          if (tmdbResult) {
+            const details = await tmdbService.getDetails(tmdbResult.id, searchType);
+            if (details) {
+              meta = tmdbService.formatForStremio(details, type, contentName);
+              meta.id = id; // Keep original ID
+            }
+          }
+        } catch (error) {
+          console.error(`[Meta] TMDB search failed for ${contentName}:`, error.message);
+        }
+
+        // If TMDB still fails, create basic metadata
+        if (!meta) {
+          meta = {
+            id: id,
+            type: type,
+            name: contentName.replace(/^\d+\s*/, ''), // Remove leading numbers
+            poster: 'https://via.placeholder.com/300x450?text=' + encodeURIComponent(contentName),
+            posterShape: 'poster',
+            description: `Watch ${contentName} on Indian OTT platforms`,
+            genres: ['South Indian'],
+            releaseInfo: new Date().getFullYear().toString()
+          };
+        }
+      }
+    }
+
+    if (meta) {
+      console.log(`Meta response for ${id}: ${meta.name}`);
+      return { meta };
+    } else {
+      console.warn(`No metadata found for ${id}`);
       return { meta: null };
     }
-
-    const [, contentType, tmdbId] = tmdbMatch;
-    const tmdbType = contentType === 'movie' ? 'movie' : 'tv';
-
-    // Get detailed info from TMDB
-    const details = await tmdbService.getDetails(parseInt(tmdbId), tmdbType);
-
-    if (!details) {
-      return { meta: null };
-    }
-
-    // Format for Stremio
-    const meta = {
-      id: id,
-      type: type,
-      name: details.title || details.name,
-      poster: tmdbService.getPosterUrl(details.poster_path),
-      background: tmdbService.getBackdropUrl(details.backdrop_path),
-      description: details.overview,
-      genres: details.genres ? details.genres.map(g => g.name) : [],
-      releaseInfo: tmdbType === 'movie'
-        ? (details.release_date ? new Date(details.release_date).getFullYear().toString() : '')
-        : (details.first_air_date ? new Date(details.first_air_date).getFullYear().toString() : ''),
-      imdbRating: details.vote_average ? details.vote_average.toString() : null,
-      runtime: tmdbType === 'movie' && details.runtime ? `${details.runtime} min` : null,
-      language: details.original_language,
-      country: details.origin_country ? details.origin_country[0] : null
-    };
-
-    // Add series-specific info
-    if (tmdbType === 'tv') {
-      meta.status = details.status;
-      meta.numberOfSeasons = details.number_of_seasons;
-      meta.seasons = details.seasons ? details.seasons.map(season => ({
-        season: season.season_number,
-        title: season.name,
-        episodeCount: season.episode_count,
-        airDate: season.air_date,
-        description: season.overview,
-        poster: tmdbService.getPosterUrl(season.poster_path)
-      })) : [];
-    }
-
-    console.log(`Meta response for ${id}: ${meta.name}`);
-    return { meta };
 
   } catch (error) {
     console.error('Meta handler error:', error.message);
@@ -149,48 +192,69 @@ builder.defineStreamHandler(async (args) => {
       return { streams: [] };
     }
 
-    // Extract TMDB ID and content info
-    const tmdbMatch = id.match(/indiaott:tmdb:(\w+):(\d+)/);
-    if (!tmdbMatch) {
-      return { streams: [] };
-    }
-
-    const [, contentType, tmdbId] = tmdbMatch;
-    const tmdbType = contentType === 'movie' ? 'movie' : 'tv';
-
-    // Get basic info from TMDB
-    const details = await tmdbService.getDetails(parseInt(tmdbId), tmdbType);
-
-    if (!details) {
-      return { streams: [] };
-    }
-
-    // Build search query
-    let query = details.title || details.name;
-    const year = tmdbType === 'movie'
-      ? (details.release_date ? new Date(details.release_date).getFullYear() : null)
-      : (details.first_air_date ? new Date(details.first_air_date).getFullYear() : null);
-
-    if (year) {
-      query += ` ${year}`;
-    }
-
-    // Extract season/episode info for TV shows
+    let query = '';
+    let contentType = type;
     let season = null;
     let episode = null;
 
+    // Extract season/episode info for TV shows
     if (type === 'series' && args.season && args.episode) {
       season = parseInt(args.season);
       episode = parseInt(args.episode);
+    }
+
+    // Try TMDB ID format first: indiaott:tmdb:movie:123
+    const tmdbMatch = id.match(/indiaott:tmdb:(\w+):(\d+)/);
+    if (tmdbMatch) {
+      const [, tmdbContentType, tmdbId] = tmdbMatch;
+      const tmdbType = tmdbContentType === 'movie' ? 'movie' : 'tv';
+
+      // Get basic info from TMDB
+      const details = await tmdbService.getDetails(parseInt(tmdbId), tmdbType);
+
+      if (details) {
+        query = details.title || details.name;
+        const year = tmdbType === 'movie'
+          ? (details.release_date ? new Date(details.release_date).getFullYear() : null)
+          : (details.first_air_date ? new Date(details.first_air_date).getFullYear() : null);
+
+        if (year) {
+          query += ` ${year}`;
+        }
+
+        contentType = tmdbType;
+      }
+    }
+
+    // If TMDB ID failed or not available, extract from other ID formats
+    if (!query) {
+      // Handle other ID formats like indiaott:mock:movie:1 or indiaott:aha:movie:0
+      const parts = id.split(':');
+      if (parts.length >= 3) {
+        const idContentType = parts[2]; // movie or series
+        const contentName = parts.slice(3).join(' ') || 'Unknown Title';
+        query = contentName.replace(/^\d+\s*/, ''); // Remove leading numbers
+        contentType = idContentType === 'movie' ? 'movie' : 'tv';
+      }
+    }
+
+    // If we still don't have a query, return empty streams
+    if (!query) {
+      console.warn(`Could not extract search query from ID: ${id}`);
+      return { streams: [] };
+    }
+
+    // Add season/episode info to query for TV shows
+    if (contentType === 'tv' && season && episode) {
       query += ` S${season.toString().padStart(2, '0')}E${episode.toString().padStart(2, '0')}`;
     }
 
-    console.log(`Searching streams for: "${query}"`);
+    console.log(`Searching streams for: "${query}" (type: ${contentType})`);
 
     // Search for streams across all debrid services
-    const streams = await debridService.searchStreams(query, tmdbType, season, episode);
+    const streams = await debridService.searchStreams(query, contentType, season, episode);
 
-    console.log(`Found ${streams.length} streams for ${query}`);
+    console.log(`Found ${streams.length} streams for "${query}"`);
     return { streams };
 
   } catch (error) {
