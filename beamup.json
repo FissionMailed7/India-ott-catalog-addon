@@ -1,25 +1,12 @@
 {
-    "projectName": "india-ott-catalog-addon",
-    "lastCommit": "4fcc893",
-    "main": "api/index.js",
+    "name": "india-ott-catalog-addon",
     "version": "1.0.0",
     "description": "A Stremio addon for South Indian OTT content",
-    "author": "Your Name",
-    "license": "MIT",
-    "engines": {
-        "node": ">=14.0.0"
-    },
+    "main": "api/index.js",
     "scripts": {
         "start": "node api/index.js"
     },
-    "dependencies": {
-        "@vercel/node": "^3.0.0",
-        "axios": "^1.6.2",
-        "cheerio": "^1.0.0-rc.12",
-        "cors": "^2.8.5",
-        "express": "^4.18.2",
-        "memoizee": "^0.4.15",
-        "node-fetch": "^2.6.7",
-        "stremio-addon-sdk": "^1.6.10"
+    "engines": {
+        "node": ">=14.0.0"
     }
 }

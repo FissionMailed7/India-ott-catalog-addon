@@ -95,6 +95,15 @@ if (req.url === '/manifest.json' || req.url === '/') {
   return res.status(200).end(JSON.stringify(manifest, null, 2));
 }
 
+    // Health check endpoint for BeamUp
+    if (req.url === '/health') {
+      return res.status(200).end(JSON.stringify({
+        status: 'ok',
+        version: '1.0.0',
+        timestamp: new Date().toISOString()
+      }));
+    }
+
     return router(req, res, () => {
       res.statusCode = 404;
       res.end(JSON.stringify({ error: 'Not Found' }));
