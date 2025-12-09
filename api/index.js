@@ -110,10 +110,13 @@ app.get('/health', (req, res) => {
 // Use Stremio router
 app.use(router);
 
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`South Indian OTT Catalog addon listening on port ${PORT}`);
-});
-
+// Export for Dokku deployment (don't call app.listen)
 module.exports = app;
+
+// Only start server if running locally (not in Dokku)
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`South Indian OTT Catalog addon listening on port ${PORT}`);
+  });
+}
