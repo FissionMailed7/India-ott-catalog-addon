@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "name": "South Indian OTT Catalog",
   "description": "A Stremio addon for latest South Indian movies and series from Aha, Sun NXT, and other OTT platforms",
-  "endpoint": "https://a.baby-beamup.club/india-ott-catalog-addon",
+  "endpoint": "https://1855ab4e2203-india-ott-catalog-addon.baby-beamup.club",
   "types": ["movie", "series"],
   "catalogs": [
     {
