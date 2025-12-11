@@ -282,6 +282,10 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.get('/manifest.json', (req, res) => {
+  res.json(builder.getManifest());
+});
+
 // Use Stremio router
 app.use(router);
 
