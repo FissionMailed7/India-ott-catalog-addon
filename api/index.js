@@ -9,45 +9,45 @@ const contentCache = new Map();
 const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 
 const builder = new addonBuilder({
-  id: 'com.global-thriller-catalog',
-  version: '1.0.0',
-  name: 'Global Hidden Gems: Thrillers',
-  description: 'Premium collection of critically acclaimed thriller, mystery, suspense, and action movies & series from around the world',
+  id: 'com.underrated-thrillers',
+  version: '1.0.1',
+  name: 'Underrated Thriller Gems',
+  description: 'Handpicked collection of the most underrated and overlooked thriller movies that deserve more attention',
   catalogs: [
     {
       type: 'movie',
-      id: 'psychological-thrillers',
-      name: 'Psychological Thrillers',
-      genres: ['Thriller', 'Psychological', 'Mystery', 'Suspense']
+      id: 'hidden-gem-thrillers',
+      name: 'Hidden Gem Thrillers',
+      genres: ['Thriller', 'Underrated', 'Suspense', 'Psychological']
     },
     {
       type: 'movie',
-      id: 'murder-mysteries',
-      name: 'Murder Mysteries',
-      genres: ['Mystery', 'Crime', 'Thriller', 'Detective']
+      id: 'mind-bending-thrillers',
+      name: 'Mind-Bending Thrillers',
+      genres: ['Thriller', 'Psychological', 'Mindfuck', 'Mystery']
     },
     {
       type: 'movie',
-      id: 'action-thrillers',
-      name: 'Action Thrillers',
-      genres: ['Action', 'Thriller', 'Adventure', 'Crime']
+      id: 'indie-thrillers',
+      name: 'Indie Thrillers',
+      genres: ['Thriller', 'Indie', 'Suspense', 'Drama']
     },
     {
-      type: 'series',
-      id: 'crime-dramas',
-      name: 'Crime Dramas',
-      genres: ['Crime', 'Drama', 'Thriller', 'Mystery']
+      type: 'movie',
+      id: 'foreign-thrillers',
+      name: 'Foreign Thrillers',
+      genres: ['Thriller', 'Foreign', 'Suspense', 'International']
     },
     {
-      type: 'series',
-      id: 'suspense-series',
-      name: 'Suspense Series',
-      genres: ['Suspense', 'Thriller', 'Mystery', 'Psychological']
+      type: 'movie',
+      id: 'neo-noir',
+      name: 'Neo-Noir Gems',
+      genres: ['Noir', 'Thriller', 'Crime', 'Mystery']
     },
     {
-      type: 'series',
-      id: 'noir-classics',
-      name: 'Film Noir Classics',
+      type: 'movie',
+      id: 'slow-burn-thrillers',
+      name: 'Slow Burn Thrillers',
       genres: ['Noir', 'Classic', 'Crime', 'Thriller']
     }
   ],

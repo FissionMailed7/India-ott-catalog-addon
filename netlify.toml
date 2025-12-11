@@ -1,0 +1,15 @@
+[build]
+  command = "npm install"
+  publish = "api"
+  functions = "api"
+
+[[redirects]]
+  from = "/*"
+  to = "/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/manifest.json"
+  to = "/manifest.json"
+  status = 200
+  force = true
