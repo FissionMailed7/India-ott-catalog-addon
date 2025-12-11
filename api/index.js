@@ -282,11 +282,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/manifest.json', (req, res) => {
-  res.json(builder.getManifest());
-});
-
-// Use Stremio router
+// Use Stremio router (handles /manifest.json automatically)
 app.use(router);
 
 // Export for Dokku deployment (don't call app.listen)
