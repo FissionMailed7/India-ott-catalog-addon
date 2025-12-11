@@ -1,24 +1,49 @@
 {
-  "id": "com.south-indian-ott-catalog",
+  "id": "com.global-thriller-catalog",
   "version": "1.0.0",
-  "name": "South Indian OTT Catalog",
-  "description": "A Stremio addon for latest South Indian movies and series from Aha, Sun NXT, and other OTT platforms",
-  "endpoint": "https://1855ab4e2203-india-ott-catalog-addon.baby-beamup.club",
+  "name": "Global Hidden Gems: Thrillers",
+  "description": "Premium collection of critically acclaimed thriller, mystery, suspense, and action movies & series from around the world",
+  "endpoint": "https://india-ott-catalog-addon-prl621jxc-kousthubhs-projects.vercel.app",
   "types": ["movie", "series"],
   "catalogs": [
     {
       "type": "movie",
-      "id": "south-indian-movies",
-      "name": "South Indian Movies",
-      "genres": ["South Indian", "Tamil", "Telugu", "Kannada", "Malayalam"]
+      "id": "psychological-thrillers",
+      "name": "Psychological Thrillers",
+      "genres": ["Thriller", "Psychological", "Mystery", "Suspense"]
+    },
+    {
+      "type": "movie",
+      "id": "murder-mysteries",
+      "name": "Murder Mysteries",
+      "genres": ["Mystery", "Crime", "Thriller", "Detective"]
+    },
+    {
+      "type": "movie",
+      "id": "action-thrillers",
+      "name": "Action Thrillers",
+      "genres": ["Action", "Thriller", "Adventure", "Crime"]
     },
     {
       "type": "series",
-      "id": "south-indian-series",
-      "name": "South Indian Series",
-      "genres": ["South Indian", "Tamil", "Telugu", "Kannada", "Malayalam"]
+      "id": "crime-dramas",
+      "name": "Crime Dramas",
+      "genres": ["Crime", "Drama", "Thriller", "Mystery"]
+    },
+    {
+      "type": "series",
+      "id": "suspense-series",
+      "name": "Suspense Series",
+      "genres": ["Suspense", "Thriller", "Mystery", "Psychological"]
+    },
+    {
+      "type": "series",
+      "id": "noir-classics",
+      "name": "Film Noir Classics",
+      "genres": ["Noir", "Classic", "Crime", "Thriller"]
     }
   ],
-  "resources": ["catalog", "meta", "stream"],
-  "idPrefixes": ["indiaott:"]
+  "resources": ["catalog", "meta"],
+  "idPrefixes": ["thriller:"],
+  "logo": "https://i.imgur.com/6Q3Z3Yz.png"
 }

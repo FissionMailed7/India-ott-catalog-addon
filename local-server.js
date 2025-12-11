@@ -16,19 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files
 app.use(express.static(path.join(__dirname)));
 
-// Create a wrapper for the serverless function
-app.use((req, res, next) => {
-    // Call the serverless handler
-    apiHandler(req, res).catch(err => {
-        console.error('Handler error:', err);
-        if (!res.headersSent) {
-            res.status(500).json({
-                error: 'Internal Server Error',
-                message: err.message
-            });
-        }
-    });
-});
+// Mount the API routes
+app.use('/', apiHandler);
 
 // Start the server
 app.listen(PORT, '0.0.0.0', () => {

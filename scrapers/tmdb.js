@@ -108,7 +108,7 @@ class TMDBService {
             name: tmdbData.title || tmdbData.name || originalTitle,
             poster: poster,
             posterShape: 'poster',
-            description: tmdbData.overview || `Watch ${originalTitle} on Indian OTT platforms`,
+            description: tmdbData.overview || `Watch ${tmdbData.title || tmdbData.name || originalTitle} on Indian OTT platforms`,
             genres: tmdbData.genres ? tmdbData.genres.map(g => g.name) : ['South Indian'],
             releaseInfo: type === 'movie'
                 ? (tmdbData.release_date ? new Date(tmdbData.release_date).getFullYear().toString() : '')
@@ -149,41 +149,83 @@ class TMDBService {
 
         for (const item of contentItems) {
             try {
-                // Extract year from releaseInfo if available
-                let year = null;
-                if (item.releaseInfo) {
-                    const yearMatch = item.releaseInfo.match(/\b(20\d{2})\b/);
-                    if (yearMatch) {
-                        year = parseInt(yearMatch[1]);
+                let details = null;
+
+                // If we have an IMDB ID in the id field, try to find it in TMDB
+                if (item.id && item.id.startsWith('tt') && item.id.length >= 9) {
+                    // Try to find TMDB movie by IMDB ID
+                    try {
+                        const findUrl = `https://api.themoviedb.org/3/find/${item.id}`;
+                        const findParams = {
+                            api_key: this.apiKey,
+                            external_source: 'imdb_id'
+                        };
+
+                        const findResponse = await axios.get(findUrl, { params: findParams });
+                        const findData = findResponse.data;
+
+                        if (findData && ((item.type === 'movie' && findData.movie_results?.length > 0) ||
+                                        (item.type === 'series' && findData.tv_results?.length > 0))) {
+                            const results = item.type === 'movie' ? findData.movie_results : findData.tv_results;
+                            details = await this.getDetails(results[0].id, item.type);
+                        }
+                    } catch (imdbError) {
+                        console.warn(`[TMDB] Could not find TMDB data for IMDB ID ${item.id}, trying title search`);
                     }
                 }
 
-                // Search TMDB
-                const tmdbResult = await this.search(item.name, item.type, year);
-
-                if (tmdbResult) {
-                    // Get detailed information
-                    const details = await this.getDetails(tmdbResult.id, item.type);
-
-                    if (details) {
-                        const enrichedItem = this.formatForStremio(details, item.type, item.name);
-                        // Preserve any additional data from scraping
-                        enrichedItem.links = item.links || [];
-                        enrichedItems.push(enrichedItem);
-                        console.log(`[TMDB] Enriched "${item.name}" with TMDB data`);
-                    } else {
-                        // Fallback to original item if details fetch fails
-                        enrichedItems.push(item);
-                        console.warn(`[TMDB] Could not get details for "${item.name}", using original data`);
+                // If IMDB lookup failed or no IMDB ID, search by title
+                if (!details) {
+                    // Extract year from releaseInfo if available
+                    let year = item.year || null;
+                    if (!year && item.releaseInfo) {
+                        const yearMatch = item.releaseInfo.match(/\b(20\d{2})\b/);
+                        if (yearMatch) {
+                            year = parseInt(yearMatch[1]);
+                        }
                     }
+
+                    // Clean up the title for better search results
+                    let cleanTitle = item.name
+                        .replace(/\s*\(\d{4}\)\s*$/, '') // Remove trailing year in parentheses
+                        .replace(/\s*-\s*Season\s*\d+/i, '') // Remove season info
+                        .trim();
+
+                    // Try multiple search variations
+                    let tmdbResult = null;
+                    const searchQueries = [
+                        cleanTitle,
+                        cleanTitle.replace(/[:\-]/g, ' '), // Remove colons and dashes
+                        cleanTitle.split(' ').slice(0, 3).join(' '), // First 3 words only
+                    ];
+
+                    for (const query of searchQueries) {
+                        tmdbResult = await this.search(query, item.type, year);
+                        if (tmdbResult) break;
+                    }
+
+                    if (tmdbResult) {
+                        details = await this.getDetails(tmdbResult.id, item.type);
+                    }
+                }
+
+                if (details) {
+                    const enrichedItem = this.formatForStremio(details, item.type, item.name);
+                    // Preserve the IMDB ID for other addons to use
+                    enrichedItem.id = item.id;
+                    // Preserve any additional data from scraping
+                    enrichedItem.links = item.links || [];
+                    enrichedItem.originalId = item.originalId;
+                    enrichedItems.push(enrichedItem);
+                    console.log(`[TMDB] Enriched "${item.name}" with TMDB data (ID: ${enrichedItem.id})`);
                 } else {
-                    // Fallback to original item if search fails
+                    // Fallback to original item if TMDB fails
                     enrichedItems.push(item);
-                    console.warn(`[TMDB] No TMDB match found for "${item.name}", using original data`);
+                    console.warn(`[TMDB] No TMDB data found for "${item.name}", using original data`);
                 }
 
                 // Small delay to avoid rate limiting
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await new Promise(resolve => setTimeout(resolve, 300));
 
             } catch (error) {
                 console.error(`[TMDB] Error enriching "${item.name}":`, error.message);

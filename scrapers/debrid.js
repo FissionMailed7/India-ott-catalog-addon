@@ -53,6 +53,17 @@ class DebridService {
 
         await Promise.allSettled(promises);
 
+        // If no streams found from debrid services, try torrent search as fallback
+        if (allStreams.length === 0) {
+            console.log(`[Debrid] No streams from debrid services, trying torrent search fallback`);
+            try {
+                const torrentStreams = await this.searchTorrents(query, type, season, episode);
+                allStreams.push(...torrentStreams);
+            } catch (error) {
+                console.error(`[Debrid] Torrent fallback failed:`, error.message);
+            }
+        }
+
         // Remove duplicates by URL
         const uniqueStreams = this.deduplicateStreams(allStreams);
 
@@ -95,6 +106,11 @@ class DebridService {
      * Search Real Debrid
      */
     async searchRealDebrid(config, query, type, season, episode) {
+        if (!config.apiKey) {
+            console.log('[RealDebrid] No API key configured, skipping');
+            return [];
+        }
+
         try {
             // First search for torrents
             const searchUrl = `${config.baseUrl}/torrents`;
@@ -325,6 +341,107 @@ class DebridService {
             seen.add(stream.url);
             return true;
         });
+    }
+
+    /**
+     * Search torrents as fallback when debrid services are not available
+     * @param {string} query - Search query
+     * @param {string} type - Content type
+     * @param {number} season - Season number
+     * @param {number} episode - Episode number
+     * @returns {Promise<Array>} - Array of torrent streams
+     */
+    async searchTorrents(query, type, season, episode) {
+        const streams = [];
+
+        try {
+            // Search The Pirate Bay (using their API or scraping)
+            const pirateBayStreams = await this.searchPirateBay(query, type, season, episode);
+            streams.push(...pirateBayStreams);
+
+            // You could add more torrent sources here:
+            // - 1337x
+            // - RARBG
+            // - Torrentz2
+            // - etc.
+
+        } catch (error) {
+            console.error('[Torrent] Search error:', error.message);
+        }
+
+        return streams.slice(0, 10); // Limit to 10 results
+    }
+
+    /**
+     * Search The Pirate Bay for torrents
+     */
+    async searchPirateBay(query, type, season, episode) {
+        try {
+            // Using a Pirate Bay proxy API (these change frequently)
+            // In production, you'd want more reliable APIs or multiple proxies
+            const baseUrls = [
+                'https://apibay.org',
+                'https://thepiratebay.org/api'
+            ];
+
+            let results = [];
+            for (const baseUrl of baseUrls) {
+                try {
+                    const searchQuery = encodeURIComponent(query);
+                    const url = `${baseUrl}/q.php?q=${searchQuery}&cat=0`;
+
+                    const response = await axios.get(url, {
+                        timeout: 5000,
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (compatible; Stremio Addon)'
+                        }
+                    });
+
+                    if (response.data && Array.isArray(response.data)) {
+                        results = response.data;
+                        break;
+                    }
+                } catch (error) {
+                    continue; // Try next proxy
+                }
+            }
+
+            const streams = [];
+
+            for (const torrent of results.slice(0, 5)) { // Limit to 5 results
+                if (torrent.info_hash && torrent.name) {
+                    // Create magnet link
+                    const magnetLink = `magnet:?xt=urn:btih:${torrent.info_hash}&dn=${encodeURIComponent(torrent.name)}`;
+
+                    // Check if it's relevant for the content type
+                    let isRelevant = true;
+                    if (type === 'series' && season && episode) {
+                        const nameLower = torrent.name.toLowerCase();
+                        // Basic check for season/episode in torrent name
+                        isRelevant = nameLower.includes(`s${season.toString().padStart(2, '0')}`) ||
+                                   nameLower.includes(`season ${season}`);
+                    }
+
+                    if (isRelevant) {
+                        streams.push({
+                            url: magnetLink,
+                            title: `Torrent - ${torrent.name}`,
+                            behaviorHints: {
+                                bingeGroup: `torrent-${torrent.info_hash}`,
+                                filename: torrent.name
+                            },
+                            infoHash: torrent.info_hash,
+                            fileIdx: 0 // Assume first file is the main video
+                        });
+                    }
+                }
+            }
+
+            return streams;
+        } catch (error) {
+            console.error('[PirateBay] Search error:', error.message);
+            return [];
+        }
     }
 
     /**
